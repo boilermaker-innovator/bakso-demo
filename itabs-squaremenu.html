@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>iTabs | SquareMenu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        :root {
+            --bg-primary: #0a0a0f; --bg-secondary: #12121a; --bg-tertiary: #1e1e2e;
+            --text-primary: #ffffff; --text-secondary: #9090b0;
+            --accent: #7c3aed; --accent2: #06b6d4; --i-button: #f59e0b;
+            --card-radius: 16px; --transition: 0.2s ease;
+        }
+        html, body { height: 100%; overflow: hidden; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.5; }
+        .container { max-width: 430px; margin: 0 auto; height: 100%; display: flex; flex-direction: column; position: relative; }
+
+        .progress-container { display: flex; gap: 4px; padding: 12px 16px 8px; position: absolute; top: 0; left: 0; right: 0; z-index: 100; background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); }
+        .progress-segment { flex: 1; height: 3px; background: rgba(255,255,255,0.2); border-radius: 2px; transition: background var(--transition); }
+        .progress-segment.viewed { background: rgba(255,255,255,0.6); }
+        .progress-segment.active { background: var(--accent); }
+
+        .cards-wrapper { flex: 1; position: relative; overflow: hidden; }
+        .card { position: absolute; inset: 0; display: flex; flex-direction: column; opacity: 0; transform: translateX(100%); transition: all 0.3s ease; pointer-events: none; }
+        .card.active { opacity: 1; transform: translateX(0); pointer-events: all; }
+        .card.prev { opacity: 0; transform: translateX(-100%); }
+
+        .card-hero { padding: 52px 20px 20px; min-height: 38%; display: flex; flex-direction: column; justify-content: flex-end; background: var(--bg-secondary); }
+        .hero-default { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); }
+        .hero-purple  { background: linear-gradient(135deg, #4c1d95 0%, #1e1b4b 100%); }
+        .hero-cyan    { background: linear-gradient(135deg, #164e63 0%, #0c4a6e 100%); }
+        .hero-amber   { background: linear-gradient(135deg, #78350f 0%, #431407 100%); }
+        .hero-green   { background: linear-gradient(135deg, #14532d 0%, #052e16 100%); }
+        .hero-red     { background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%); }
+
+        .card-tag { font-size: 10px; font-weight: 700; letter-spacing: 0.15em; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px; }
+        .tag-purple { color: #a78bfa; } .tag-cyan { color: #67e8f9; } .tag-amber { color: #fcd34d; } .tag-green { color: #6ee7b7; } .tag-red { color: #fca5a5; }
+        .card-headline { font-size: clamp(20px, 5vw, 26px); font-weight: 700; line-height: 1.25; }
+        .hero-default em { color: #cbd5e1; font-style: normal; }
+        .hero-purple  em { color: #a78bfa; font-style: normal; }
+        .hero-cyan    em { color: #67e8f9; font-style: normal; }
+        .hero-amber   em { color: #fcd34d; font-style: normal; }
+        .hero-green   em { color: #6ee7b7; font-style: normal; }
+        .hero-red     em { color: #fca5a5; font-style: normal; }
+
+        .card-body { flex: 1; padding: 20px; overflow-y: auto; background: var(--bg-secondary); display: flex; flex-direction: column; gap: 16px; }
+        .card-summary { font-size: 15px; color: var(--text-secondary); line-height: 1.7; }
+        .analogy-box { background: var(--bg-tertiary); border-radius: 12px; padding: 14px 16px; border-left: 3px solid var(--accent2); }
+        .analogy-title { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent2); margin-bottom: 6px; }
+        .analogy-text { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+        .i-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+        .i-button { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); border-radius: 20px; color: var(--i-button); font-size: 13px; font-weight: 500; cursor: pointer; transition: all var(--transition); font-family: 'Inter', sans-serif; }
+        .i-button:active { background: rgba(245,158,11,0.2); transform: scale(0.97); }
+        .i-dot { width: 16px; height: 16px; background: var(--i-button); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #000; flex-shrink: 0; }
+
+        .nav-area { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px 20px; background: var(--bg-secondary); border-top: 1px solid rgba(255,255,255,0.06); }
+        .nav-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); background: transparent; color: var(--text-primary); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+        .nav-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+        .nav-btn:not(:disabled):active { background: rgba(255,255,255,0.1); }
+        .card-counter { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity var(--transition); max-width: 430px; margin: 0 auto; }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        .modal-sheet { width: 100%; max-width: 430px; margin: 0 auto; background: var(--bg-tertiary); border-radius: 20px 20px 0 0; padding: 20px; transform: translateY(100%); transition: transform 0.3s ease; }
+        .modal-overlay.active .modal-sheet { transform: translateY(0); }
+        .modal-handle { width: 36px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin: 0 auto 16px; }
+        .modal-term { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+        .modal-type { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--i-button); margin-bottom: 12px; }
+        .modal-content { font-size: 14px; color: var(--text-secondary); line-height: 1.7; }
+        .modal-close { margin-top: 20px; width: 100%; padding: 12px; background: rgba(255,255,255,0.08); border: none; border-radius: 10px; color: var(--text-primary); font-size: 14px; font-weight: 600; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="progress-container" id="progress"></div>
+    <div class="cards-wrapper" id="cardsWrapper"></div>
+    <div class="nav-area">
+        <button class="nav-btn" id="prevBtn" onclick="navigate(-1)">←</button>
+        <span class="card-counter" id="counter">1 / 6</span>
+        <button class="nav-btn" id="nextBtn" onclick="navigate(1)">→</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-term" id="modalTerm"></div>
+        <div class="modal-type" id="modalType"></div>
+        <div class="modal-content" id="modalContent"></div>
+        <button class="modal-close" onclick="closeModal()">Close</button>
+    </div>
+</div>
+
+<script>
+const cards = [
+    {
+        tag: "01 / THE MOMENT",
+        tagClass: "",
+        headline: "A Night Out That Sparked a <em>Business Idea</em>",
+        heroClass: "hero-default",
+        summary: "Went to an Indonesian restaurant in Perth. Good food, good vibe — but the ordering experience was stuck in the past. Paper menu, staff taking orders, a buzzer for when your food was ready. Then I noticed it: a Square register on the counter.",
+        analogy: {
+            title: "The gap",
+            text: "Square is one of the most advanced payment platforms in the world. But the menu experience in front of it was completely untouched."
+        },
+        iButtons: [
+            { label: "What is Square?", type: "definition", term: "Square", content: "Square is a US-based fintech used by millions of small businesses worldwide for payments, inventory and point-of-sale. It has a full API ecosystem including Catalogue, Orders and Payments — the building blocks for a complete digital ordering experience." }
+        ]
+    },
+    {
+        tag: "02 / THE PROBLEM",
+        tagClass: "tag-red",
+        headline: "The Menu Was a <em>Wall of Mystery</em>",
+        heroClass: "hero-red",
+        summary: "Indonesian menus are full of unfamiliar words — Bakso Urat, Bakso Beranak Mercon, Batagor. If you don't know the cuisine, you're guessing. Staff spend half their time explaining dishes instead of serving. Customers either play it safe or order the wrong thing.",
+        analogy: {
+            title: "The real cost",
+            text: "Every table that can't decode the menu is a slower order, a hesitant customer, and a missed upsell."
+        },
+        iButtons: [
+            { label: "Why language matters", type: "why-it-matters", term: "Unfamiliar Menu Language", content: "Perth has hundreds of ethnic restaurants — Indonesian, Vietnamese, Thai, Japanese, Korean, Malaysian. Every single one has the same problem: menus full of words that mean nothing to most customers. The restaurant owner knows the food intimately but has no way to share that knowledge at scale." },
+            { label: "What is Bakso?", type: "definition", term: "Bakso", content: "Bakso is an Indonesian meatball dish — typically made from beef, served in a rich broth with noodles. It's street food royalty in Indonesia, with countless regional variations. Beranak means 'pregnant' — the meatball is stuffed with another ingredient inside. Mercon means firecracker — it's filled with chilli paste." }
+        ]
+    },
+    {
+        tag: "03 / THE INSIGHT",
+        tagClass: "tag-cyan",
+        headline: "What if the <em>Menu Could Explain Itself?</em>",
+        heroClass: "hero-cyan",
+        summary: "Tap a dish name — get a description. Tap an ingredient — find out what it is. Switch languages with a flag. No staff needed, no guessing. The menu becomes interactive, educational, and personal. And Claude already knows Indonesian food.",
+        analogy: {
+            title: "Think of it like...",
+            text: "A knowledgeable local sitting at every table, ready to explain any dish in your language."
+        },
+        iButtons: [
+            { label: "The iTabs connection", type: "context", term: "iTabs Pattern", content: "This is the same contextual popup mechanic that powers iTabs — tap an unfamiliar term and get an explanation. It works for tradie quotes, event summaries, and now restaurant menus. The pattern is universal: wherever there's unfamiliar language, there's a use case for an AI-powered popup." },
+            { label: "Why multilingual?", type: "why-it-matters", term: "Multilingual Menus", content: "Perth's dining scene is as multicultural as its population. A table of four might include someone who grew up eating this food and someone who's never heard of it. Multilingual AI descriptions serve both simultaneously — deep cultural context for the diaspora, plain English for everyone else." }
+        ]
+    },
+    {
+        tag: "04 / THE PRODUCT",
+        tagClass: "tag-amber",
+        headline: "<em>SquareMenu</em> — The Menu That Thinks",
+        heroClass: "hero-amber",
+        summary: "Scan a QR on the table. Browse a mobile menu. Tap any dish name to get an AI description — in English, Bahasa Indonesia, or Vietnamese. Tap any ingredient to go deeper. Add to cart. Pay. Get a buzzer number. No app, no friction, no confusion.",
+        analogy: null,
+        iButtons: [
+            { label: "Why the name?", type: "definition", term: "SquareMenu", content: "SquareMenu sits at the intersection of Square the payment platform and the QR code — which is literally a square — that customers scan to access it. The name is instantly understood by both restaurant owners (who know Square) and customers (who know QR codes)." },
+            { label: "The buzzer insight", type: "context", term: "Buzzer System", content: "Many casual restaurants use a buzzer system — customer orders, pays, gets a buzzer, collects when it goes off. SquareMenu fits perfectly into this flow: order on phone, pay on phone, buzzer number appears on screen. No table service needed, no POS integration required to start." }
+        ]
+    },
+    {
+        tag: "05 / THE OPPORTUNITY",
+        tagClass: "tag-purple",
+        headline: "Every Ethnic Restaurant Has the <em>Same Problem</em>",
+        heroClass: "hero-purple",
+        summary: "Indonesian, Vietnamese, Thai, Japanese, Korean, Malay — every cuisine with unfamiliar language is a potential customer. That's thousands of restaurants in Australia alone. Square has over 4 million merchants worldwide. The menu experience across all of them is still stuck in 2005.",
+        analogy: {
+            title: "The retention mechanic",
+            text: "QR code goes dead when they cancel — same model as iTabs. The menu lives and dies with the subscription."
+        },
+        iButtons: [
+            { label: "Free vs paid", type: "definition", term: "Business Model", content: "Free tier: AI dish descriptions in English, SquareMenu branding, QR code. Paid tier (~$49/month): multilingual descriptions, restaurant branding and logo, upsell prompts, order dashboard, Google Review prompt built in, analytics. The free tier is the cold outreach hook — build a demo menu for a restaurant, show them, let them claim it." },
+            { label: "Why now?", type: "why-it-matters", term: "Timing", content: "AI language models have only recently become good enough to explain cuisine authentically in multiple languages. A year ago this would have required a content team. Today Claude can describe Bakso Beranak Mercon in natural Vietnamese in under two seconds. The technology just caught up with the opportunity." }
+        ]
+    },
+    {
+        tag: "06 / BUILT IN ONE NIGHT",
+        tagClass: "tag-green",
+        headline: "From Dinner Observation to <em>Live Prototype</em>",
+        heroClass: "hero-green",
+        summary: "The full prototype — real menu, real prices, AI descriptions, three languages, ingredient explorer, payment flow, buzzer confirmation — was built in a single evening. Vibe coding at its finest. The idea came from a night out. The prototype proved it works.",
+        analogy: null,
+        iButtons: [
+            { label: "Try the prototype", type: "related", term: "SquareMenu Demo", content: "The live prototype is deployed at boilermaker-innovator.github.io/bakso-demo/ — open it on your phone. Tap any dish name, switch between English, Bahasa and Vietnamese, tap the ingredients, go through the full payment flow to the buzzer screen. Built from a photo of the actual menu." }
+        ]
+    }
+];
+
+let currentCard = 0;
+const totalCards = cards.length;
+const modalOverlay = document.getElementById('modalOverlay');
+const modalTerm = document.getElementById('modalTerm');
+const modalType = document.getElementById('modalType');
+const modalContent = document.getElementById('modalContent');
+
+function init() {
+    const progress = document.getElementById('progress');
+    const wrapper = document.getElementById('cardsWrapper');
+    cards.forEach((card, i) => {
+        const seg = document.createElement('div');
+        seg.className = 'progress-segment' + (i === 0 ? ' active' : '');
+        progress.appendChild(seg);
+        wrapper.appendChild(buildCard(card, i));
+    });
+    document.getElementById('counter').textContent = `1 / ${totalCards}`;
+    document.getElementById('prevBtn').disabled = true;
+    document.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight') navigate(1);
+        if (e.key === 'ArrowLeft') navigate(-1);
+        if (e.key === 'Escape') closeModal();
+    });
+    let startX = 0;
+    const cw = document.getElementById('cardsWrapper');
+    cw.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+    cw.addEventListener('touchend', e => {
+        const diff = startX - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 50) navigate(diff > 0 ? 1 : -1);
+    });
+}
+
+function buildCard(card, index) {
+    const el = document.createElement('div');
+    el.className = 'card' + (index === 0 ? ' active' : '');
+    const analogyHTML = card.analogy ? `<div class="analogy-box"><div class="analogy-title">${card.analogy.title}</div><div class="analogy-text">${card.analogy.text}</div></div>` : '';
+    const iButtonsHTML = card.iButtons.length ? `<div class="i-buttons">${card.iButtons.map(b => `<button class="i-button" data-term="${b.term}" data-type="${b.type}" data-content="${encodeURIComponent(b.content)}"><span class="i-dot">i</span>${b.label}</button>`).join('')}</div>` : '';
+    el.innerHTML = `
+        <div class="card-hero ${card.heroClass}">
+            <div class="card-tag ${card.tagClass}">${card.tag}</div>
+            <h2 class="card-headline">${card.headline}</h2>
+        </div>
+        <div class="card-body">
+            <p class="card-summary">${card.summary}</p>
+            ${analogyHTML}
+            ${iButtonsHTML}
+        </div>`;
+    el.querySelectorAll('.i-button').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            openModal(btn.dataset.term, btn.dataset.type, decodeURIComponent(btn.dataset.content));
+        });
+    });
+    return el;
+}
+
+function navigate(direction) {
+    const next = currentCard + direction;
+    if (next >= 0 && next < totalCards) updateCard(next);
+}
+
+function updateCard(index) {
+    document.querySelectorAll('.card').forEach((c, i) => {
+        c.classList.remove('active', 'prev');
+        if (i === index) c.classList.add('active');
+        else if (i < index) c.classList.add('prev');
+    });
+    document.querySelectorAll('.progress-segment').forEach((s, i) => {
+        s.classList.remove('active', 'viewed');
+        if (i === index) s.classList.add('active');
+        else if (i < index) s.classList.add('viewed');
+    });
+    currentCard = index;
+    document.getElementById('counter').textContent = `${index + 1} / ${totalCards}`;
+    document.getElementById('prevBtn').disabled = index === 0;
+    document.getElementById('nextBtn').disabled = index === totalCards - 1;
+}
+
+function openModal(term, type, content) {
+    const typeLabels = { 'definition': 'Definition', 'context': 'Context', 'why-it-matters': 'Why It Matters', 'related': 'Related' };
+    modalTerm.textContent = term;
+    modalType.textContent = typeLabels[type] || type;
+    const urlRegex = /(https?:\/\/[^\s]+|[a-zA-Z0-9-]+\.github\.io\/[^\s]+)/g;
+    modalContent.innerHTML = content.replace(urlRegex, url => {
+        const href = url.startsWith('http') ? url : 'https://' + url;
+        return '<a href="' + href + '" target="_blank" style="color:#f59e0b;text-decoration:underline;">' + url + '</a>';
+    });
+    modalOverlay.classList.add('active');
+}
+
+function closeModal() { modalOverlay.classList.remove('active'); }
+
+init();
+</script>
+</body>
+</html>
